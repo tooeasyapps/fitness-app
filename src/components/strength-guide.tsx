@@ -143,7 +143,7 @@ export function StrengthGuide() {
         <CardContent>
           <div className="space-y-3 text-sm text-slate-700">
             <p><strong>Warm-up set —</strong> Light weight, 10–12 reps. Get the movement pattern right and blood into the muscle. Not tiring.</p>
-            <p><strong>Working sets (3–4) —</strong> Pick a weight where the last 2 reps are genuinely hard. If you finish easy, go up. If you can't hit the bottom of your rep range, drop the weight.</p>
+            <p><strong>Working sets (3–4) —</strong> Pick a weight where the last 2 reps are genuinely hard. If you get under 6 reps, drop the weight 5–10%. If you get 10 or above, increase the weight 5–10%.</p>
             <p><strong>Rest —</strong> 90 seconds for legs, 60–90 seconds for upper body. Use a timer.</p>
           </div>
         </CardContent>

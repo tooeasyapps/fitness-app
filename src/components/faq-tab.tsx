@@ -120,12 +120,23 @@ export function FAQTab({ clientName, color }: { clientName: string; color: "ver"
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 sm:p-4 text-sm text-slate-700 space-y-2">
+        <p className="font-semibold text-slate-900">App Guide:</p>
+        <ul className="list-disc pl-5 space-y-1 text-xs sm:text-sm">
+          <li><strong>Check-in:</strong> For logging your weekly check-ins</li>
+          <li><strong>Weights:</strong> For logging your lifts for the session</li>
+          <li><strong>Cardio:</strong> Cardio guide</li>
+          <li><strong>Strength:</strong> Strength session guide</li>
+          <li><strong>Questions:</strong> For any general questions</li>
+        </ul>
+      </div>
+
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4 flex items-start gap-3">
         <MessageCircleQuestion className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
         <div>
           <h3 className="font-semibold text-amber-900 text-sm sm:text-base">Got a question?</h3>
           <p className="text-xs sm:text-sm text-amber-800 mt-1">
-            Submit your questions below! I review and answer new questions weekly, so check back here for updates.
+            Submit your questions below! I review and answer new questions weekly.
           </p>
         </div>
       </div>
