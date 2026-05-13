@@ -22,6 +22,7 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [form, setForm] = useState({
     weekDate: todayISO(),
     kjBurnt: "",
@@ -65,8 +66,8 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this check-in?")) return;
     await fetch(`/api/checkins/${id}`, { method: "DELETE" });
+    setConfirmDeleteId(null);
     loadCheckins();
   }
 
@@ -250,9 +251,20 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
                       <td className="py-3 pr-4">{c.weightKg ? `${c.weightKg} kg` : "—"}</td>
                       <td className="py-3 pr-4 text-slate-500 max-w-xs truncate">{c.notes || "—"}</td>
                       <td className="py-3">
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
-                          <Trash2 className="h-4 w-4 text-slate-400" />
-                        </Button>
+                        {confirmDeleteId === c.id ? (
+                          <div className="flex items-center gap-1">
+                            <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)} className="h-7 text-xs px-2">
+                              Delete
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2">
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteId(c.id)}>
+                            <Trash2 className="h-4 w-4 text-slate-400" />
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}
