@@ -471,10 +471,10 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
                               <Button variant="ghost" size="sm" className="h-6 text-[10px] px-1.5" onClick={() => openEdit(s)}>Edit</Button>
                               {confirmDeleteId === s.id ? (
                                 <>
-                                  <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)} className="h-6 text-[10px] px-1.5" disabled={deletingId === s.id}>
-                                    {deletingId === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Del"}
+                                  <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)} className="h-7 text-xs px-2.5" disabled={deletingId === s.id}>
+                                    {deletingId === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Delete"}
                                   </Button>
-                                  <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-6 text-[10px] px-1.5" disabled={deletingId === s.id}>✕</Button>
+                                  <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2" disabled={deletingId === s.id}>Cancel</Button>
                                 </>
                               ) : (
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setConfirmDeleteId(s.id)}>
