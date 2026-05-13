@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EXERCISES, formatDate, todayISO, suggestNextWeight } from "@/lib/utils";
-import { Plus, Trash2, TrendingUp, Dumbbell, Trophy, ChevronDown } from "lucide-react";
+import { Plus, Trash2, TrendingUp, Dumbbell, Trophy, ChevronDown, Loader2 } from "lucide-react";
 
 interface Lift {
   id: number;
@@ -40,6 +40,8 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
   const [pbOpen, setPbOpen] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [form, setForm] = useState({
     sessionDate: todayISO(),
     exerciseName: ALL_EXERCISES[0],
@@ -128,45 +130,55 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
-    const body = {
-      clientId,
-      sessionDate: form.sessionDate,
-      exerciseName: form.exerciseName,
-      startingWeight: form.startingWeight ? parseFloat(form.startingWeight) : null,
-      set1Weight: form.set1Weight ? parseFloat(form.set1Weight) : null,
-      set1Reps: form.set1Reps ? parseInt(form.set1Reps) : null,
-      set2Weight: form.set2Weight ? parseFloat(form.set2Weight) : null,
-      set2Reps: form.set2Reps ? parseInt(form.set2Reps) : null,
-      set3Weight: form.set3Weight ? parseFloat(form.set3Weight) : null,
-      set3Reps: form.set3Reps ? parseInt(form.set3Reps) : null,
-      set4Weight: form.set4Weight ? parseFloat(form.set4Weight) : null,
-      set4Reps: form.set4Reps ? parseInt(form.set4Reps) : null,
-      pbWeight: form.pbWeight ? parseFloat(form.pbWeight) : null,
-      nextSessionTarget: form.nextSessionTarget ? parseFloat(form.nextSessionTarget) : null,
-      notes: form.notes || null,
-    };
-    if (editingId) {
-      await fetch(`/api/lifts/${editingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-    } else {
-      await fetch("/api/lifts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+    setSaving(true);
+    try {
+      const body = {
+        clientId,
+        sessionDate: form.sessionDate,
+        exerciseName: form.exerciseName,
+        startingWeight: form.startingWeight ? parseFloat(form.startingWeight) : null,
+        set1Weight: form.set1Weight ? parseFloat(form.set1Weight) : null,
+        set1Reps: form.set1Reps ? parseInt(form.set1Reps) : null,
+        set2Weight: form.set2Weight ? parseFloat(form.set2Weight) : null,
+        set2Reps: form.set2Reps ? parseInt(form.set2Reps) : null,
+        set3Weight: form.set3Weight ? parseFloat(form.set3Weight) : null,
+        set3Reps: form.set3Reps ? parseInt(form.set3Reps) : null,
+        set4Weight: form.set4Weight ? parseFloat(form.set4Weight) : null,
+        set4Reps: form.set4Reps ? parseInt(form.set4Reps) : null,
+        pbWeight: form.pbWeight ? parseFloat(form.pbWeight) : null,
+        nextSessionTarget: form.nextSessionTarget ? parseFloat(form.nextSessionTarget) : null,
+        notes: form.notes || null,
+      };
+      if (editingId) {
+        await fetch(`/api/lifts/${editingId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      } else {
+        await fetch("/api/lifts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      }
+      resetForm();
+      setShowForm(false);
+      await loadLifts();
+    } finally {
+      setSaving(false);
     }
-    resetForm();
-    setShowForm(false);
-    loadLifts();
   }
 
   async function handleDelete(id: number) {
-    await fetch(`/api/lifts/${id}`, { method: "DELETE" });
-    setConfirmDeleteId(null);
-    loadLifts();
+    setDeletingId(id);
+    try {
+      await fetch(`/api/lifts/${id}`, { method: "DELETE" });
+      setConfirmDeleteId(null);
+      await loadLifts();
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   // Suggestion based on top working set
@@ -277,39 +289,38 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
         {showForm && (
           <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4" noValidate>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <Label htmlFor="sessionDate" className="text-xs sm:text-sm">Date <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="sessionDate"
-                    type="date"
-                    value={form.sessionDate}
-                    onChange={(e) => setForm({ ...form, sessionDate: e.target.value })}
-                    className={errors.sessionDate ? "input-error" : ""}
-                  />
-                  {errors.sessionDate && <p className="text-xs text-red-500 mt-1">{errors.sessionDate}</p>}
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="exerciseName" className="text-xs sm:text-sm">Exercise <span className="text-red-500">*</span></Label>
-                  <select
-                    id="exerciseName"
-                    value={form.exerciseName}
-                    onChange={(e) => setForm({ ...form, exerciseName: e.target.value })}
-                    className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ${errors.exerciseName ? "input-error" : ""}`}
-                  >
-                    <optgroup label="Default exercises">
-                      {EXERCISES.default.map((ex) => (
-                        <option key={ex} value={ex}>{ex}</option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="Alternative exercises">
-                      {EXERCISES.alternatives.map((ex) => (
-                        <option key={ex} value={ex}>{ex}</option>
-                      ))}
-                    </optgroup>
-                  </select>
-                  {errors.exerciseName && <p className="text-xs text-red-500 mt-1">{errors.exerciseName}</p>}
-                </div>
+              {/* Date on its own row to prevent overflow */}
+              <div>
+                <Label htmlFor="sessionDate" className="text-xs sm:text-sm">Date <span className="text-red-500">*</span></Label>
+                <Input
+                  id="sessionDate"
+                  type="date"
+                  value={form.sessionDate}
+                  onChange={(e) => setForm({ ...form, sessionDate: e.target.value })}
+                  className={`max-w-[200px] ${errors.sessionDate ? "input-error" : ""}`}
+                />
+                {errors.sessionDate && <p className="text-xs text-red-500 mt-1">{errors.sessionDate}</p>}
+              </div>
+              <div>
+                <Label htmlFor="exerciseName" className="text-xs sm:text-sm">Exercise <span className="text-red-500">*</span></Label>
+                <select
+                  id="exerciseName"
+                  value={form.exerciseName}
+                  onChange={(e) => setForm({ ...form, exerciseName: e.target.value })}
+                  className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ${errors.exerciseName ? "input-error" : ""}`}
+                >
+                  <optgroup label="Default exercises">
+                    {EXERCISES.default.map((ex) => (
+                      <option key={ex} value={ex}>{ex}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Alternative exercises">
+                    {EXERCISES.alternatives.map((ex) => (
+                      <option key={ex} value={ex}>{ex}</option>
+                    ))}
+                  </optgroup>
+                </select>
+                {errors.exerciseName && <p className="text-xs text-red-500 mt-1">{errors.exerciseName}</p>}
               </div>
 
               <div>
@@ -362,7 +373,7 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="pbWeight" className="text-xs sm:text-sm">PB (kg)</Label>
+                  <Label htmlFor="pbWeight" className="text-xs sm:text-sm">Session PB (kg)</Label>
                   <Input
                     id="pbWeight"
                     type="number"
@@ -408,8 +419,10 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
               </div>
 
               <div className="flex gap-2">
-                <Button type="submit" className={colorClass} size="sm">{editingId ? "Update" : "Save"}</Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => { resetForm(); setShowForm(false); }}>Cancel</Button>
+                <Button type="submit" className={colorClass} size="sm" disabled={saving}>
+                  {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving...</> : editingId ? "Update" : "Save"}
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => { resetForm(); setShowForm(false); }} disabled={saving}>Cancel</Button>
               </div>
             </form>
           </CardContent>
@@ -454,8 +467,10 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
                               <Button variant="ghost" size="sm" className="h-6 text-[10px] px-1.5" onClick={() => openEdit(s)}>Edit</Button>
                               {confirmDeleteId === s.id ? (
                                 <>
-                                  <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)} className="h-6 text-[10px] px-1.5">Del</Button>
-                                  <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-6 text-[10px] px-1.5">✕</Button>
+                                  <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)} className="h-6 text-[10px] px-1.5" disabled={deletingId === s.id}>
+                                    {deletingId === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Del"}
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-6 text-[10px] px-1.5" disabled={deletingId === s.id}>✕</Button>
                                 </>
                               ) : (
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setConfirmDeleteId(s.id)}>
@@ -509,8 +524,10 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
                                   <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>Edit</Button>
                                   {confirmDeleteId === s.id ? (
                                     <>
-                                      <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)} className="h-7 text-xs px-2">Delete</Button>
-                                      <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2">Cancel</Button>
+                                      <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)} className="h-7 text-xs px-2" disabled={deletingId === s.id}>
+                                        {deletingId === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Delete"}
+                                      </Button>
+                                      <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2" disabled={deletingId === s.id}>Cancel</Button>
                                     </>
                                   ) : (
                                     <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteId(s.id)}>

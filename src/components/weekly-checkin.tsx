@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDate, todayISO } from "@/lib/utils";
-import { Trash2, Plus, Flame, Target, Scale } from "lucide-react";
+import { Trash2, Plus, Flame, Target, Scale, Loader2 } from "lucide-react";
 
 interface Checkin {
   id: number;
@@ -28,6 +28,8 @@ interface FormErrors {
 export function WeeklyCheckin({ clientId, clientName, color }: { clientId: number; clientName: string; color: "ver" | "val" }) {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -57,22 +59,24 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
 
   function validateForm(): FormErrors {
     const errs: FormErrors = {};
-    if (!form.weekDate) errs.weekDate = "Date is required";
-    if (form.calorieScore) {
-      const score = parseInt(form.calorieScore);
-      if (score < 0 || score > 10) errs.calorieScore = "Must be 0–10";
-    }
-    if (form.weightKg) {
-      const w = parseFloat(form.weightKg);
-      if (w <= 0 || w > 500) errs.weightKg = "Enter a valid weight";
-    }
-    if (form.kjBurnt) {
+    if (!form.weekDate) errs.weekDate = "Required";
+    if (!form.kjBurnt) {
+      errs.kjBurnt = "Required";
+    } else {
       const kj = parseInt(form.kjBurnt);
       if (kj < 0) errs.kjBurnt = "Cannot be negative";
     }
-    // At least one metric should be filled
-    if (!form.kjBurnt && !form.calorieScore && !form.weightKg) {
-      errs.kjBurnt = "Fill at least one metric";
+    if (!form.calorieScore) {
+      errs.calorieScore = "Required";
+    } else {
+      const score = parseInt(form.calorieScore);
+      if (score < 0 || score > 10) errs.calorieScore = "Must be 0–10";
+    }
+    if (!form.weightKg) {
+      errs.weightKg = "Required";
+    } else {
+      const w = parseFloat(form.weightKg);
+      if (w <= 0 || w > 500) errs.weightKg = "Invalid weight";
     }
     return errs;
   }
@@ -84,29 +88,39 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
-    await fetch("/api/checkins", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        clientId,
-        weekDate: form.weekDate,
-        kjBurnt: form.kjBurnt ? parseInt(form.kjBurnt) : null,
-        calorieScore: form.calorieScore ? parseInt(form.calorieScore) : null,
-        weightKg: form.weightKg ? parseFloat(form.weightKg) : null,
-        notes: form.notes || null,
-      }),
-    });
-    setForm({ weekDate: todayISO(), kjBurnt: "", calorieScore: "", weightKg: "", notes: "" });
-    setShowForm(false);
-    setSubmitted(false);
-    setErrors({});
-    loadCheckins();
+    setSaving(true);
+    try {
+      await fetch("/api/checkins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId,
+          weekDate: form.weekDate,
+          kjBurnt: form.kjBurnt ? parseInt(form.kjBurnt) : null,
+          calorieScore: form.calorieScore ? parseInt(form.calorieScore) : null,
+          weightKg: form.weightKg ? parseFloat(form.weightKg) : null,
+          notes: form.notes || null,
+        }),
+      });
+      setForm({ weekDate: todayISO(), kjBurnt: "", calorieScore: "", weightKg: "", notes: "" });
+      setShowForm(false);
+      setSubmitted(false);
+      setErrors({});
+      await loadCheckins();
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDelete(id: number) {
-    await fetch(`/api/checkins/${id}`, { method: "DELETE" });
-    setConfirmDeleteId(null);
-    loadCheckins();
+    setDeletingId(id);
+    try {
+      await fetch(`/api/checkins/${id}`, { method: "DELETE" });
+      setConfirmDeleteId(null);
+      await loadCheckins();
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   function handleCancel() {
@@ -121,24 +135,24 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
     const next = { ...form, ...updates };
     setForm(next);
     if (submitted) {
-      // Re-validate with the new values
-      const tempForm = { ...form, ...updates };
       const errs: FormErrors = {};
-      if (!tempForm.weekDate) errs.weekDate = "Date is required";
-      if (tempForm.calorieScore) {
-        const score = parseInt(tempForm.calorieScore);
+      if (!next.weekDate) errs.weekDate = "Required";
+      if (!next.kjBurnt) {
+        errs.kjBurnt = "Required";
+      } else if (parseInt(next.kjBurnt) < 0) {
+        errs.kjBurnt = "Cannot be negative";
+      }
+      if (!next.calorieScore) {
+        errs.calorieScore = "Required";
+      } else {
+        const score = parseInt(next.calorieScore);
         if (score < 0 || score > 10) errs.calorieScore = "Must be 0–10";
       }
-      if (tempForm.weightKg) {
-        const w = parseFloat(tempForm.weightKg);
-        if (w <= 0 || w > 500) errs.weightKg = "Enter a valid weight";
-      }
-      if (tempForm.kjBurnt) {
-        const kj = parseInt(tempForm.kjBurnt);
-        if (kj < 0) errs.kjBurnt = "Cannot be negative";
-      }
-      if (!tempForm.kjBurnt && !tempForm.calorieScore && !tempForm.weightKg) {
-        errs.kjBurnt = "Fill at least one metric";
+      if (!next.weightKg) {
+        errs.weightKg = "Required";
+      } else {
+        const w = parseFloat(next.weightKg);
+        if (w <= 0 || w > 500) errs.weightKg = "Invalid weight";
       }
       setErrors(errs);
     }
@@ -222,59 +236,61 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
         {showForm && (
           <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4" noValidate>
-              <div className="grid grid-cols-2 gap-3">
+              {/* Date on its own row on mobile */}
+              <div>
+                <Label htmlFor="weekDate" className="text-xs sm:text-sm">Week ending <span className="text-red-500">*</span></Label>
+                <Input
+                  id="weekDate"
+                  type="date"
+                  value={form.weekDate}
+                  onChange={(e) => updateForm({ weekDate: e.target.value })}
+                  className={`max-w-[200px] ${errors.weekDate ? "input-error" : ""}`}
+                />
+                {errors.weekDate && <p className="text-xs text-red-500 mt-1">{errors.weekDate}</p>}
+              </div>
+              {/* 3-col metrics */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <div>
-                  <Label htmlFor="weekDate" className="text-xs sm:text-sm">Week ending <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="weekDate"
-                    type="date"
-                    value={form.weekDate}
-                    onChange={(e) => updateForm({ weekDate: e.target.value })}
-                    className={errors.weekDate ? "input-error" : ""}
-                  />
-                  {errors.weekDate && <p className="text-xs text-red-500 mt-1">{errors.weekDate}</p>}
-                </div>
-                <div>
-                  <Label htmlFor="kjBurnt" className="text-xs sm:text-sm">kJ burnt</Label>
+                  <Label htmlFor="kjBurnt" className="text-xs sm:text-sm">kJ burnt <span className="text-red-500">*</span></Label>
                   <Input
                     id="kjBurnt"
                     type="number"
                     inputMode="numeric"
-                    placeholder="e.g. 11500"
+                    placeholder="11500"
                     value={form.kjBurnt}
                     onChange={(e) => updateForm({ kjBurnt: e.target.value })}
-                    className={errors.kjBurnt ? "input-error" : ""}
+                    className={`text-sm ${errors.kjBurnt ? "input-error" : ""}`}
                   />
-                  {errors.kjBurnt && <p className="text-xs text-red-500 mt-1">{errors.kjBurnt}</p>}
+                  {errors.kjBurnt && <p className="text-[10px] sm:text-xs text-red-500 mt-0.5">{errors.kjBurnt}</p>}
                 </div>
                 <div>
-                  <Label htmlFor="calorieScore" className="text-xs sm:text-sm">Cal score (0-10)</Label>
+                  <Label htmlFor="calorieScore" className="text-xs sm:text-sm">Cal score <span className="text-red-500">*</span></Label>
                   <Input
                     id="calorieScore"
                     type="number"
                     inputMode="numeric"
                     min="0"
                     max="10"
-                    placeholder="e.g. 8"
+                    placeholder="0–10"
                     value={form.calorieScore}
                     onChange={(e) => updateForm({ calorieScore: e.target.value })}
-                    className={errors.calorieScore ? "input-error" : ""}
+                    className={`text-sm ${errors.calorieScore ? "input-error" : ""}`}
                   />
-                  {errors.calorieScore && <p className="text-xs text-red-500 mt-1">{errors.calorieScore}</p>}
+                  {errors.calorieScore && <p className="text-[10px] sm:text-xs text-red-500 mt-0.5">{errors.calorieScore}</p>}
                 </div>
                 <div>
-                  <Label htmlFor="weightKg" className="text-xs sm:text-sm">Weight (kg)</Label>
+                  <Label htmlFor="weightKg" className="text-xs sm:text-sm">Weight kg <span className="text-red-500">*</span></Label>
                   <Input
                     id="weightKg"
                     type="number"
                     inputMode="decimal"
                     step="0.1"
-                    placeholder="e.g. 72.5"
+                    placeholder="72.5"
                     value={form.weightKg}
                     onChange={(e) => updateForm({ weightKg: e.target.value })}
-                    className={errors.weightKg ? "input-error" : ""}
+                    className={`text-sm ${errors.weightKg ? "input-error" : ""}`}
                   />
-                  {errors.weightKg && <p className="text-xs text-red-500 mt-1">{errors.weightKg}</p>}
+                  {errors.weightKg && <p className="text-[10px] sm:text-xs text-red-500 mt-0.5">{errors.weightKg}</p>}
                 </div>
               </div>
               <div>
@@ -287,8 +303,10 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
                 />
               </div>
               <div className="flex gap-2">
-                <Button type="submit" className={colorClass} size="sm">Save</Button>
-                <Button type="button" variant="outline" size="sm" onClick={handleCancel}>Cancel</Button>
+                <Button type="submit" className={colorClass} size="sm" disabled={saving}>
+                  {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving...</> : "Save"}
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={handleCancel} disabled={saving}>Cancel</Button>
               </div>
             </form>
           </CardContent>
@@ -317,8 +335,10 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
                       <div>
                         {confirmDeleteId === c.id ? (
                           <div className="flex gap-1">
-                            <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)} className="h-7 text-xs px-2">Delete</Button>
-                            <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2">Cancel</Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)} className="h-7 text-xs px-2" disabled={deletingId === c.id}>
+                              {deletingId === c.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Delete"}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2" disabled={deletingId === c.id}>Cancel</Button>
                           </div>
                         ) : (
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(c.id)}>
@@ -377,10 +397,10 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
                         <td className="py-3">
                           {confirmDeleteId === c.id ? (
                             <div className="flex items-center gap-1">
-                              <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)} className="h-7 text-xs px-2">
-                                Delete
+                              <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)} className="h-7 text-xs px-2" disabled={deletingId === c.id}>
+                                {deletingId === c.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Delete"}
                               </Button>
-                              <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2">
+                              <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2" disabled={deletingId === c.id}>
                                 Cancel
                               </Button>
                             </div>
