@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDate, todayISO } from "@/lib/utils";
-import { Trash2, Plus, Flame, Target, Scale, TrendingUp } from "lucide-react";
+import { Trash2, Plus, Flame, Target, Scale } from "lucide-react";
 
 interface Checkin {
   id: number;
@@ -85,45 +85,45 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
   const weightTrend = latest && previous ? trend(latest.weightKg, previous.weightKg) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Summary cards */}
       {latest && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Last week kJ burnt</CardTitle>
-              <Flame className={`h-5 w-5 ${accentText}`} />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-slate-600">kJ burnt</CardTitle>
+              <Flame className={`h-4 w-4 sm:h-5 sm:w-5 ${accentText}`} />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{latest.kjBurnt?.toLocaleString() ?? "—"}</div>
+            <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+              <div className="text-lg sm:text-2xl font-bold">{latest.kjBurnt?.toLocaleString() ?? "—"}</div>
               {kjTrend && (
-                <p className="text-xs text-slate-500 mt-1">
-                  {kjTrend.up ? "↑" : "↓"} {Math.abs(kjTrend.diff).toLocaleString()} from previous
+                <p className="text-[10px] sm:text-xs text-slate-500 mt-1">
+                  {kjTrend.up ? "↑" : "↓"} {Math.abs(kjTrend.diff).toLocaleString()}
                 </p>
               )}
-              <p className="text-xs text-slate-500 mt-1">Target: 11,500</p>
+              <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">Target: 11,500</p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Calorie adherence</CardTitle>
-              <Target className={`h-5 w-5 ${accentText}`} />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-slate-600">Cal score</CardTitle>
+              <Target className={`h-4 w-4 sm:h-5 sm:w-5 ${accentText}`} />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{latest.calorieScore ?? "—"}<span className="text-base text-slate-400 font-normal"> / 10</span></div>
-              <p className="text-xs text-slate-500 mt-1">2000–2200 cal/day target</p>
+            <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+              <div className="text-lg sm:text-2xl font-bold">{latest.calorieScore ?? "—"}<span className="text-sm sm:text-base text-slate-400 font-normal"> / 10</span></div>
+              <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">2000–2200 cal/day</p>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Weight</CardTitle>
-              <Scale className={`h-5 w-5 ${accentText}`} />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-slate-600">Weight</CardTitle>
+              <Scale className={`h-4 w-4 sm:h-5 sm:w-5 ${accentText}`} />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{latest.weightKg ? `${latest.weightKg} kg` : "—"}</div>
+            <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+              <div className="text-lg sm:text-2xl font-bold">{latest.weightKg ? `${latest.weightKg}` : "—"}<span className="text-sm sm:text-base text-slate-400 font-normal"> kg</span></div>
               {weightTrend && (
-                <p className="text-xs text-slate-500 mt-1">
-                  {weightTrend.up ? "↑" : "↓"} {Math.abs(weightTrend.diff).toFixed(1)} kg from previous
+                <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">
+                  {weightTrend.up ? "↑" : "↓"} {Math.abs(weightTrend.diff).toFixed(1)} kg
                 </p>
               )}
             </CardContent>
@@ -133,23 +133,23 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
 
       {/* Add new */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Weekly Check-in — {clientName}</CardTitle>
-              <CardDescription>Log this week's kJ burnt, calorie adherence, and weight</CardDescription>
+        <CardHeader className="px-4 sm:px-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg truncate">Weekly Check-in — {clientName}</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Log kJ burnt, calorie adherence, and weight</CardDescription>
             </div>
             {!showForm && (
-              <Button onClick={() => setShowForm(true)} className={colorClass}>
-                <Plus className="h-4 w-4" /> New Check-in
+              <Button onClick={() => setShowForm(true)} className={`${colorClass} shrink-0 text-xs sm:text-sm`} size="sm">
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> New
               </Button>
             )}
           </div>
         </CardHeader>
         {showForm && (
-          <CardContent>
+          <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <Label htmlFor="weekDate">Week ending</Label>
                   <Input
@@ -161,7 +161,7 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
                   />
                 </div>
                 <div>
-                  <Label htmlFor="kjBurnt">Kilojoules burnt</Label>
+                  <Label htmlFor="kjBurnt">kJ burnt</Label>
                   <Input
                     id="kjBurnt"
                     type="number"
@@ -171,7 +171,7 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
                   />
                 </div>
                 <div>
-                  <Label htmlFor="calorieScore">Calorie adherence (0-10)</Label>
+                  <Label htmlFor="calorieScore">Cal score (0-10)</Label>
                   <Input
                     id="calorieScore"
                     type="number"
@@ -214,63 +214,105 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
 
       {/* History */}
       <Card>
-        <CardHeader>
-          <CardTitle>History</CardTitle>
-          <CardDescription>{checkins.length} check-in{checkins.length === 1 ? "" : "s"} logged</CardDescription>
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="text-base sm:text-lg">History</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">{checkins.length} check-in{checkins.length === 1 ? "" : "s"} logged</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           {loading ? (
             <p className="text-sm text-slate-500">Loading...</p>
           ) : checkins.length === 0 ? (
             <p className="text-sm text-slate-500">No check-ins yet. Add one to get started.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b">
-                  <tr className="text-left text-slate-600">
-                    <th className="pb-2 pr-4">Week</th>
-                    <th className="pb-2 pr-4">kJ Burnt</th>
-                    <th className="pb-2 pr-4">Cal Score</th>
-                    <th className="pb-2 pr-4">Weight</th>
-                    <th className="pb-2 pr-4">Notes</th>
-                    <th className="pb-2"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {checkins.map((c) => (
-                    <tr key={c.id} className="border-b last:border-0">
-                      <td className="py-3 pr-4 font-medium">{formatDate(c.weekDate)}</td>
-                      <td className="py-3 pr-4">
-                        {c.kjBurnt ? (
-                          <span className={c.kjBurnt >= 11500 ? "text-green-600 font-medium" : "text-slate-700"}>
-                            {c.kjBurnt.toLocaleString()}
-                          </span>
-                        ) : "—"}
-                      </td>
-                      <td className="py-3 pr-4">{c.calorieScore ?? "—"}</td>
-                      <td className="py-3 pr-4">{c.weightKg ? `${c.weightKg} kg` : "—"}</td>
-                      <td className="py-3 pr-4 text-slate-500 max-w-xs truncate">{c.notes || "—"}</td>
-                      <td className="py-3">
+            <>
+              {/* Mobile card layout */}
+              <div className="block sm:hidden space-y-2">
+                {checkins.map((c) => (
+                  <div key={c.id} className="rounded-lg border p-3 bg-slate-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">{formatDate(c.weekDate)}</span>
+                      <div>
                         {confirmDeleteId === c.id ? (
-                          <div className="flex items-center gap-1">
-                            <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)} className="h-7 text-xs px-2">
-                              Delete
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2">
-                              Cancel
-                            </Button>
+                          <div className="flex gap-1">
+                            <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)} className="h-7 text-xs px-2">Delete</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2">Cancel</Button>
                           </div>
                         ) : (
-                          <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteId(c.id)}>
-                            <Trash2 className="h-4 w-4 text-slate-400" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(c.id)}>
+                            <Trash2 className="h-3.5 w-3.5 text-slate-400" />
                           </Button>
                         )}
-                      </td>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div>
+                        <span className="text-slate-500 block">kJ</span>
+                        <span className={c.kjBurnt && c.kjBurnt >= 11500 ? "text-green-600 font-medium" : ""}>
+                          {c.kjBurnt?.toLocaleString() ?? "—"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">Cal</span>
+                        {c.calorieScore ?? "—"}
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">Weight</span>
+                        {c.weightKg ? `${c.weightKg} kg` : "—"}
+                      </div>
+                    </div>
+                    {c.notes && <p className="text-xs text-slate-500 mt-1.5 italic">{c.notes}</p>}
+                  </div>
+                ))}
+              </div>
+              {/* Desktop table layout */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="border-b">
+                    <tr className="text-left text-slate-600">
+                      <th className="pb-2 pr-4">Week</th>
+                      <th className="pb-2 pr-4">kJ Burnt</th>
+                      <th className="pb-2 pr-4">Cal Score</th>
+                      <th className="pb-2 pr-4">Weight</th>
+                      <th className="pb-2 pr-4">Notes</th>
+                      <th className="pb-2"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {checkins.map((c) => (
+                      <tr key={c.id} className="border-b last:border-0">
+                        <td className="py-3 pr-4 font-medium">{formatDate(c.weekDate)}</td>
+                        <td className="py-3 pr-4">
+                          {c.kjBurnt ? (
+                            <span className={c.kjBurnt >= 11500 ? "text-green-600 font-medium" : "text-slate-700"}>
+                              {c.kjBurnt.toLocaleString()}
+                            </span>
+                          ) : "—"}
+                        </td>
+                        <td className="py-3 pr-4">{c.calorieScore ?? "—"}</td>
+                        <td className="py-3 pr-4">{c.weightKg ? `${c.weightKg} kg` : "—"}</td>
+                        <td className="py-3 pr-4 text-slate-500 max-w-xs truncate">{c.notes || "—"}</td>
+                        <td className="py-3">
+                          {confirmDeleteId === c.id ? (
+                            <div className="flex items-center gap-1">
+                              <Button variant="destructive" size="sm" onClick={() => handleDelete(c.id)} className="h-7 text-xs px-2">
+                                Delete
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2">
+                                Cancel
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteId(c.id)}>
+                              <Trash2 className="h-4 w-4 text-slate-400" />
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
