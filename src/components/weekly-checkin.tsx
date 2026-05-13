@@ -295,7 +295,7 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
               </div>
               <div className="bg-slate-50 p-3 rounded-md border text-xs text-slate-600 space-y-1.5">
                 <p><strong>kJ burnt:</strong> This is the weekly total. Go to fitness app, click activity rings, and add up kJ from last week.</p>
-                <p><strong>Cal score:</strong> How well you stuck between current calorie range (2000-2200) out of 10.</p>
+                <p><strong>Cal score:</strong> A general idea of how well you stayed between 2000-2200 calories out of 10.</p>
               </div>
               <div>
                 <Label htmlFor="notes" className="text-xs sm:text-sm">Notes (optional)</Label>

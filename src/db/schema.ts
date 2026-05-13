@@ -45,3 +45,15 @@ export type NewCheckin = typeof checkins.$inferInsert;
 export type Checkin = typeof checkins.$inferSelect;
 export type NewLift = typeof lifts.$inferInsert;
 export type Lift = typeof lifts.$inferSelect;
+
+// FAQs / Questions
+export const faqs = pgTable("faqs", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  answer: text("answer"),
+  askedBy: varchar("asked_by", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type NewFAQ = typeof faqs.$inferInsert;
+export type FAQ = typeof faqs.$inferSelect;

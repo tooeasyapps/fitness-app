@@ -8,7 +8,8 @@ import { WeightTracker } from "@/components/weight-tracker";
 import { CardioGuide } from "@/components/cardio-guide";
 import { StrengthGuide } from "@/components/strength-guide";
 import { ToastNotification } from "@/components/toast-notification";
-import { Activity, Dumbbell, Heart, ClipboardCheck } from "lucide-react";
+import { FAQTab } from "@/components/faq-tab";
+import { Activity, Dumbbell, Heart, ClipboardCheck, HelpCircle } from "lucide-react";
 
 interface Client {
   id: number;
@@ -106,24 +107,30 @@ export default function Home() {
       {/* Main content */}
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Tabs defaultValue="checkin" className="space-y-4 sm:space-y-6">
-          <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto gap-1">
-            <TabsTrigger value="checkin" className="flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm">
-              <ClipboardCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Check-in
-            </TabsTrigger>
-            <TabsTrigger value="weights" className="flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm">
-              <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Weights
-            </TabsTrigger>
-            <TabsTrigger value="cardio" className="flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm">
-              <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Cardio
-            </TabsTrigger>
-            <TabsTrigger value="strength" className="flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm">
-              <Dumbbell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Strength
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:pb-0 scrollbar-hide">
+            <TabsList className="inline-flex sm:grid sm:w-full sm:grid-cols-5 h-auto gap-1">
+              <TabsTrigger value="checkin" className="flex-shrink-0 flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm min-w-[90px]">
+                <ClipboardCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Check-in
+              </TabsTrigger>
+              <TabsTrigger value="weights" className="flex-shrink-0 flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm min-w-[90px]">
+                <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Weights
+              </TabsTrigger>
+              <TabsTrigger value="cardio" className="flex-shrink-0 flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm min-w-[90px]">
+                <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Cardio
+              </TabsTrigger>
+              <TabsTrigger value="strength" className="flex-shrink-0 flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm min-w-[90px]">
+                <Dumbbell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Strength
+              </TabsTrigger>
+              <TabsTrigger value="faqs" className="flex-shrink-0 flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm min-w-[90px]">
+                <HelpCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                FAQs
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {selected && selectedClient && (
             <>
@@ -132,6 +139,9 @@ export default function Home() {
               </TabsContent>
               <TabsContent value="weights">
                 <WeightTracker clientId={selected} clientName={selectedClient.name} color={colorKey} />
+              </TabsContent>
+              <TabsContent value="faqs">
+                <FAQTab clientName={selectedClient.name} color={colorKey} />
               </TabsContent>
             </>
           )}
