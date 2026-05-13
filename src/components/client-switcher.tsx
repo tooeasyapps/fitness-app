@@ -69,9 +69,9 @@ export function ClientSwitcher({
           
           <div className="relative z-10 flex items-start justify-between gap-2">
             <div>
-              <p className="font-semibold text-sm">Switch profiles here!</p>
+              <p className="font-semibold text-sm">Select your profile</p>
               <p className="text-xs text-slate-300 mt-1">
-                Tap to view the other person's check-ins, weights, and questions.
+                Switch to your profile to log check-ins, record weights, and view your progress.
               </p>
             </div>
             <button 
