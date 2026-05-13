@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { HelpCircle, Plus, Loader2, MessageCircleQuestion, Clock } from "lucide-react";
+import { HelpCircle, Plus, Loader2, MessageCircleQuestion, Clock, Trash, MessageSquareText } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 interface FAQ {
@@ -23,6 +23,14 @@ export function FAQTab({ clientName, color }: { clientName: string; color: "ver"
   const [saving, setSaving] = useState(false);
   const [newQuestion, setNewQuestion] = useState("");
   const [error, setError] = useState("");
+  
+  // Answering state
+  const [answeringId, setAnsweringId] = useState<number | null>(null);
+  const [answerText, setAnswerText] = useState("");
+  const [submittingAnswer, setSubmittingAnswer] = useState(false);
+  
+  // Deleting state
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const colorClass = color === "ver" ? "bg-ver text-white" : "bg-val text-white";
   const accentText = color === "ver" ? "text-ver" : "text-val";
@@ -71,6 +79,42 @@ export function FAQTab({ clientName, color }: { clientName: string; color: "ver"
       setError("Failed to submit question. Please try again.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm("Are you sure you want to delete this question?")) return;
+    
+    setDeletingId(id);
+    try {
+      await fetch(`/api/faqs/${id}`, { method: "DELETE" });
+      await loadFaqs();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete question.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleSubmitAnswer(id: number) {
+    if (!answerText.trim()) return;
+
+    setSubmittingAnswer(true);
+    try {
+      await fetch(`/api/faqs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answer: answerText.trim() }),
+      });
+      setAnsweringId(null);
+      setAnswerText("");
+      await loadFaqs();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to submit answer.");
+    } finally {
+      setSubmittingAnswer(false);
     }
   }
 
@@ -146,8 +190,8 @@ export function FAQTab({ clientName, color }: { clientName: string; color: "ver"
           ) : (
             <div className="space-y-4">
               {faqs.map((faq) => (
-                <div key={faq.id} className="rounded-lg border bg-white overflow-hidden shadow-sm">
-                  <div className={`p-3 sm:p-4 border-b ${accentBgLight} ${accentBorder}`}>
+                <div key={faq.id} className="rounded-lg border bg-white overflow-hidden shadow-sm relative group">
+                  <div className={`p-3 sm:p-4 border-b ${accentBgLight} ${accentBorder} pr-12`}>
                     <h4 className="font-semibold text-slate-900 text-sm sm:text-base leading-snug">
                       Q: {faq.question}
                     </h4>
@@ -161,16 +205,86 @@ export function FAQTab({ clientName, color }: { clientName: string; color: "ver"
                       )}
                     </div>
                   </div>
+                  
+                  {/* Delete Button */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(faq.id)}
+                    disabled={deletingId === faq.id}
+                    className="absolute top-2 right-2 h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                    title="Delete question"
+                  >
+                    {deletingId === faq.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash className="h-4 w-4" />}
+                  </Button>
+
                   <div className="p-3 sm:p-4 bg-slate-50">
-                    {faq.answer ? (
-                      <div className="text-sm sm:text-base text-slate-700 whitespace-pre-wrap">
-                        <span className="font-semibold text-slate-900 mr-2">A:</span>
-                        {faq.answer}
+                    {answeringId === faq.id ? (
+                      <div className="space-y-3">
+                        <Input
+                          autoFocus
+                          placeholder="Type your answer here..."
+                          value={answerText}
+                          onChange={(e) => setAnswerText(e.target.value)}
+                          className="text-sm"
+                        />
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={() => handleSubmitAnswer(faq.id)} 
+                            size="sm" 
+                            disabled={submittingAnswer || !answerText.trim()}
+                            className={colorClass}
+                          >
+                            {submittingAnswer ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> Saving...</> : "Save Answer"}
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setAnsweringId(null);
+                              setAnswerText("");
+                            }}
+                            disabled={submittingAnswer}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : faq.answer ? (
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="text-sm sm:text-base text-slate-700 whitespace-pre-wrap">
+                          <span className="font-semibold text-slate-900 mr-2">A:</span>
+                          {faq.answer}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setAnsweringId(faq.id);
+                            setAnswerText(faq.answer || "");
+                          }}
+                          className="h-7 px-2 text-xs text-slate-400 hover:text-slate-600 shrink-0"
+                        >
+                          Edit
+                        </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-500 italic">
-                        <Clock className="h-3.5 w-3.5" />
-                        Pending answer...
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-500 italic">
+                          <Clock className="h-3.5 w-3.5" />
+                          Pending answer...
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setAnsweringId(faq.id);
+                            setAnswerText("");
+                          }}
+                          className="h-7 text-xs bg-white flex items-center gap-1.5"
+                        >
+                          <MessageSquareText className="h-3 w-3" /> Answer
+                        </Button>
                       </div>
                     )}
                   </div>
