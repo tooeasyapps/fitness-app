@@ -27,6 +27,7 @@ interface FormErrors {
   sessionDate?: string;
   exerciseName?: string;
   sets?: string;
+  pbWeight?: string;
 }
 
 const ALL_EXERCISES = [...EXERCISES.default, ...EXERCISES.alternatives];
@@ -120,6 +121,7 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
     if (!hasSet && !form.startingWeight) {
       errs.sets = "Log at least one set or starting weight";
     }
+    if (!form.pbWeight) errs.pbWeight = "Required";
     return errs;
   }
 
@@ -373,7 +375,7 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="pbWeight" className="text-xs sm:text-sm">Session PB (kg)</Label>
+                  <Label htmlFor="pbWeight" className="text-xs sm:text-sm">Session PB (kg) <span className="text-red-500">*</span></Label>
                   <Input
                     id="pbWeight"
                     type="number"
@@ -382,7 +384,9 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
                     placeholder="Personal best"
                     value={form.pbWeight}
                     onChange={(e) => setForm({ ...form, pbWeight: e.target.value })}
+                    className={errors.pbWeight ? "input-error" : ""}
                   />
+                  {errors.pbWeight && <p className="text-[10px] sm:text-xs text-red-500 mt-0.5">{errors.pbWeight}</p>}
                 </div>
                 <div>
                   <Label htmlFor="nextSessionTarget" className="text-xs sm:text-sm">Next target (kg)</Label>
