@@ -381,7 +381,7 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
                     type="number"
                     inputMode="decimal"
                     step="0.5"
-                    placeholder="Personal best"
+                    placeholder="Session PB"
                     value={form.pbWeight}
                     onChange={(e) => setForm({ ...form, pbWeight: e.target.value })}
                     className={errors.pbWeight ? "input-error" : ""}
