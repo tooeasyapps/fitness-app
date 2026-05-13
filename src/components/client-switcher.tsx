@@ -21,20 +21,15 @@ export function ClientSwitcher({
   const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
-    // Check if the user has seen the tooltip before
-    const hasSeenTooltip = localStorage.getItem("hasSeenClientSwitcherTooltip");
-    if (!hasSeenTooltip) {
-      // Small delay to ensure the UI is fully rendered before showing
-      const timer = setTimeout(() => {
-        setShowTooltip(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
+    // Small delay to ensure the UI is fully rendered before showing
+    const timer = setTimeout(() => {
+      setShowTooltip(true);
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const dismissTooltip = () => {
     setShowTooltip(false);
-    localStorage.setItem("hasSeenClientSwitcherTooltip", "true");
   };
 
   return (

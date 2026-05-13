@@ -7,7 +7,6 @@ import { WeeklyCheckin } from "@/components/weekly-checkin";
 import { WeightTracker } from "@/components/weight-tracker";
 import { CardioGuide } from "@/components/cardio-guide";
 import { StrengthGuide } from "@/components/strength-guide";
-import { ToastNotification } from "@/components/toast-notification";
 import { FAQTab } from "@/components/faq-tab";
 import { Activity, Dumbbell, Heart, ClipboardCheck, HelpCircle } from "lucide-react";
 
@@ -20,11 +19,6 @@ export default function Home() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastColor, setToastColor] = useState<"ver" | "val">("ver");
-  const [showToast, setShowToast] = useState(false);
-  const [initialLoadDone, setInitialLoadDone] = useState(false);
-
   useEffect(() => {
     fetch("/api/clients")
       .then((r) => r.json())
@@ -36,31 +30,10 @@ export default function Home() {
       .catch(() => setLoading(false));
   }, []);
 
-  // Show toast on initial load
-  useEffect(() => {
-    if (!loading && selected && !initialLoadDone) {
-      const client = clients.find((c) => c.id === selected);
-      if (client) {
-        const color: "ver" | "val" = client.name === "Val" ? "val" : "ver";
-        setToastColor(color);
-        setToastMessage(`You're viewing ${client.name}'s dashboard`);
-        setShowToast(true);
-        setInitialLoadDone(true);
-      }
-    }
-  }, [loading, selected, clients, initialLoadDone]);
-
   // Handle client switch
   const handleClientSelect = useCallback((id: number) => {
     setSelected(id);
-    const client = clients.find((c) => c.id === id);
-    if (client) {
-      const color: "ver" | "val" = client.name === "Val" ? "val" : "ver";
-      setToastColor(color);
-      setToastMessage(`Switched to ${client.name}'s dashboard`);
-      setShowToast(true);
-    }
-  }, [clients]);
+  }, []);
 
   const selectedClient = clients.find((c) => c.id === selected);
   const colorKey: "ver" | "val" = selectedClient?.name === "Val" ? "val" : "ver";
@@ -83,14 +56,6 @@ export default function Home() {
         }
       }}
     >
-      {/* Toast notification */}
-      <ToastNotification
-        message={toastMessage}
-        color={toastColor}
-        show={showToast}
-        onClose={() => setShowToast(false)}
-      />
-
       {/* Header */}
       <header className="border-b bg-white sticky top-0 z-20 shadow-sm">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-3">
