@@ -20,6 +20,8 @@
     --input: 214 32% 91%;
     --ring: 217 50% 26%;
     --radius: 0.5rem;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
   }
 
   .dark {
@@ -45,8 +47,41 @@
   border-color: hsl(var(--border));
 }
 
+/* Prevent horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 body {
   background: hsl(var(--background));
   color: hsl(var(--foreground));
   font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Prevent iOS zoom on input focus — force 16px minimum */
+@media screen and (max-width: 640px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Error state for inputs */
+.input-error {
+  border-color: hsl(0 84% 60%) !important;
+  box-shadow: 0 0 0 1px hsl(0 84% 60%);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }

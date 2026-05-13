@@ -18,11 +18,20 @@ interface Checkin {
   notes: string | null;
 }
 
+interface FormErrors {
+  weekDate?: string;
+  kjBurnt?: string;
+  calorieScore?: string;
+  weightKg?: string;
+}
+
 export function WeeklyCheckin({ clientId, clientName, color }: { clientId: number; clientName: string; color: "ver" | "val" }) {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
     weekDate: todayISO(),
     kjBurnt: "",
@@ -46,8 +55,35 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
     setLoading(false);
   }
 
+  function validateForm(): FormErrors {
+    const errs: FormErrors = {};
+    if (!form.weekDate) errs.weekDate = "Date is required";
+    if (form.calorieScore) {
+      const score = parseInt(form.calorieScore);
+      if (score < 0 || score > 10) errs.calorieScore = "Must be 0–10";
+    }
+    if (form.weightKg) {
+      const w = parseFloat(form.weightKg);
+      if (w <= 0 || w > 500) errs.weightKg = "Enter a valid weight";
+    }
+    if (form.kjBurnt) {
+      const kj = parseInt(form.kjBurnt);
+      if (kj < 0) errs.kjBurnt = "Cannot be negative";
+    }
+    // At least one metric should be filled
+    if (!form.kjBurnt && !form.calorieScore && !form.weightKg) {
+      errs.kjBurnt = "Fill at least one metric";
+    }
+    return errs;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitted(true);
+    const errs = validateForm();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
     await fetch("/api/checkins", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -62,6 +98,8 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
     });
     setForm({ weekDate: todayISO(), kjBurnt: "", calorieScore: "", weightKg: "", notes: "" });
     setShowForm(false);
+    setSubmitted(false);
+    setErrors({});
     loadCheckins();
   }
 
@@ -69,6 +107,41 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
     await fetch(`/api/checkins/${id}`, { method: "DELETE" });
     setConfirmDeleteId(null);
     loadCheckins();
+  }
+
+  function handleCancel() {
+    setShowForm(false);
+    setSubmitted(false);
+    setErrors({});
+    setForm({ weekDate: todayISO(), kjBurnt: "", calorieScore: "", weightKg: "", notes: "" });
+  }
+
+  // Revalidate on change if already submitted
+  function updateForm(updates: Partial<typeof form>) {
+    const next = { ...form, ...updates };
+    setForm(next);
+    if (submitted) {
+      // Re-validate with the new values
+      const tempForm = { ...form, ...updates };
+      const errs: FormErrors = {};
+      if (!tempForm.weekDate) errs.weekDate = "Date is required";
+      if (tempForm.calorieScore) {
+        const score = parseInt(tempForm.calorieScore);
+        if (score < 0 || score > 10) errs.calorieScore = "Must be 0–10";
+      }
+      if (tempForm.weightKg) {
+        const w = parseFloat(tempForm.weightKg);
+        if (w <= 0 || w > 500) errs.weightKg = "Enter a valid weight";
+      }
+      if (tempForm.kjBurnt) {
+        const kj = parseInt(tempForm.kjBurnt);
+        if (kj < 0) errs.kjBurnt = "Cannot be negative";
+      }
+      if (!tempForm.kjBurnt && !tempForm.calorieScore && !tempForm.weightKg) {
+        errs.kjBurnt = "Fill at least one metric";
+      }
+      setErrors(errs);
+    }
   }
 
   // Latest stats for summary cards
@@ -92,12 +165,12 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-slate-600">kJ burnt</CardTitle>
-              <Flame className={`h-4 w-4 sm:h-5 sm:w-5 ${accentText}`} />
+              <Flame className={`h-4 w-4 sm:h-5 sm:w-5 ${accentText} shrink-0`} />
             </CardHeader>
             <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-              <div className="text-lg sm:text-2xl font-bold">{latest.kjBurnt?.toLocaleString() ?? "—"}</div>
+              <div className="text-base sm:text-2xl font-bold truncate">{latest.kjBurnt?.toLocaleString() ?? "—"}</div>
               {kjTrend && (
-                <p className="text-[10px] sm:text-xs text-slate-500 mt-1">
+                <p className="text-[10px] sm:text-xs text-slate-500 mt-1 truncate">
                   {kjTrend.up ? "↑" : "↓"} {Math.abs(kjTrend.diff).toLocaleString()}
                 </p>
               )}
@@ -107,22 +180,22 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-slate-600">Cal score</CardTitle>
-              <Target className={`h-4 w-4 sm:h-5 sm:w-5 ${accentText}`} />
+              <Target className={`h-4 w-4 sm:h-5 sm:w-5 ${accentText} shrink-0`} />
             </CardHeader>
             <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-              <div className="text-lg sm:text-2xl font-bold">{latest.calorieScore ?? "—"}<span className="text-sm sm:text-base text-slate-400 font-normal"> / 10</span></div>
-              <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">2000–2200 cal/day</p>
+              <div className="text-base sm:text-2xl font-bold">{latest.calorieScore ?? "—"}<span className="text-xs sm:text-base text-slate-400 font-normal">/10</span></div>
+              <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">2000–2200 cal</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-slate-600">Weight</CardTitle>
-              <Scale className={`h-4 w-4 sm:h-5 sm:w-5 ${accentText}`} />
+              <Scale className={`h-4 w-4 sm:h-5 sm:w-5 ${accentText} shrink-0`} />
             </CardHeader>
             <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-              <div className="text-lg sm:text-2xl font-bold">{latest.weightKg ? `${latest.weightKg}` : "—"}<span className="text-sm sm:text-base text-slate-400 font-normal"> kg</span></div>
+              <div className="text-base sm:text-2xl font-bold truncate">{latest.weightKg ?? "—"}<span className="text-xs sm:text-base text-slate-400 font-normal"> kg</span></div>
               {weightTrend && (
-                <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">
+                <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 truncate">
                   {weightTrend.up ? "↑" : "↓"} {Math.abs(weightTrend.diff).toFixed(1)} kg
                 </p>
               )}
@@ -135,9 +208,9 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
       <Card>
         <CardHeader className="px-4 sm:px-6">
           <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <CardTitle className="text-base sm:text-lg truncate">Weekly Check-in — {clientName}</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">Log kJ burnt, calorie adherence, and weight</CardDescription>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-sm sm:text-lg truncate">Check-in — {clientName}</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Log kJ, calorie adherence & weight</CardDescription>
             </div>
             {!showForm && (
               <Button onClick={() => setShowForm(true)} className={`${colorClass} shrink-0 text-xs sm:text-sm`} size="sm">
@@ -148,64 +221,74 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
         </CardHeader>
         {showForm && (
           <CardContent className="px-4 sm:px-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4" noValidate>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="weekDate">Week ending</Label>
+                  <Label htmlFor="weekDate" className="text-xs sm:text-sm">Week ending <span className="text-red-500">*</span></Label>
                   <Input
                     id="weekDate"
                     type="date"
                     value={form.weekDate}
-                    onChange={(e) => setForm({ ...form, weekDate: e.target.value })}
-                    required
+                    onChange={(e) => updateForm({ weekDate: e.target.value })}
+                    className={errors.weekDate ? "input-error" : ""}
                   />
+                  {errors.weekDate && <p className="text-xs text-red-500 mt-1">{errors.weekDate}</p>}
                 </div>
                 <div>
-                  <Label htmlFor="kjBurnt">kJ burnt</Label>
+                  <Label htmlFor="kjBurnt" className="text-xs sm:text-sm">kJ burnt</Label>
                   <Input
                     id="kjBurnt"
                     type="number"
+                    inputMode="numeric"
                     placeholder="e.g. 11500"
                     value={form.kjBurnt}
-                    onChange={(e) => setForm({ ...form, kjBurnt: e.target.value })}
+                    onChange={(e) => updateForm({ kjBurnt: e.target.value })}
+                    className={errors.kjBurnt ? "input-error" : ""}
                   />
+                  {errors.kjBurnt && <p className="text-xs text-red-500 mt-1">{errors.kjBurnt}</p>}
                 </div>
                 <div>
-                  <Label htmlFor="calorieScore">Cal score (0-10)</Label>
+                  <Label htmlFor="calorieScore" className="text-xs sm:text-sm">Cal score (0-10)</Label>
                   <Input
                     id="calorieScore"
                     type="number"
+                    inputMode="numeric"
                     min="0"
                     max="10"
                     placeholder="e.g. 8"
                     value={form.calorieScore}
-                    onChange={(e) => setForm({ ...form, calorieScore: e.target.value })}
+                    onChange={(e) => updateForm({ calorieScore: e.target.value })}
+                    className={errors.calorieScore ? "input-error" : ""}
                   />
+                  {errors.calorieScore && <p className="text-xs text-red-500 mt-1">{errors.calorieScore}</p>}
                 </div>
                 <div>
-                  <Label htmlFor="weightKg">Weight (kg)</Label>
+                  <Label htmlFor="weightKg" className="text-xs sm:text-sm">Weight (kg)</Label>
                   <Input
                     id="weightKg"
                     type="number"
+                    inputMode="decimal"
                     step="0.1"
                     placeholder="e.g. 72.5"
                     value={form.weightKg}
-                    onChange={(e) => setForm({ ...form, weightKg: e.target.value })}
+                    onChange={(e) => updateForm({ weightKg: e.target.value })}
+                    className={errors.weightKg ? "input-error" : ""}
                   />
+                  {errors.weightKg && <p className="text-xs text-red-500 mt-1">{errors.weightKg}</p>}
                 </div>
               </div>
               <div>
-                <Label htmlFor="notes">Notes (optional)</Label>
+                <Label htmlFor="notes" className="text-xs sm:text-sm">Notes (optional)</Label>
                 <Input
                   id="notes"
-                  placeholder="Anything to remember about this week"
+                  placeholder="Anything to remember"
                   value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  onChange={(e) => updateForm({ notes: e.target.value })}
                 />
               </div>
               <div className="flex gap-2">
-                <Button type="submit" className={colorClass}>Save</Button>
-                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+                <Button type="submit" className={colorClass} size="sm">Save</Button>
+                <Button type="button" variant="outline" size="sm" onClick={handleCancel}>Cancel</Button>
               </div>
             </form>
           </CardContent>
@@ -215,7 +298,7 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
       {/* History */}
       <Card>
         <CardHeader className="px-4 sm:px-6">
-          <CardTitle className="text-base sm:text-lg">History</CardTitle>
+          <CardTitle className="text-sm sm:text-lg">History</CardTitle>
           <CardDescription className="text-xs sm:text-sm">{checkins.length} check-in{checkins.length === 1 ? "" : "s"} logged</CardDescription>
         </CardHeader>
         <CardContent className="px-4 sm:px-6">
@@ -260,7 +343,7 @@ export function WeeklyCheckin({ clientId, clientName, color }: { clientId: numbe
                         {c.weightKg ? `${c.weightKg} kg` : "—"}
                       </div>
                     </div>
-                    {c.notes && <p className="text-xs text-slate-500 mt-1.5 italic">{c.notes}</p>}
+                    {c.notes && <p className="text-xs text-slate-500 mt-1.5 italic truncate">{c.notes}</p>}
                   </div>
                 ))}
               </div>

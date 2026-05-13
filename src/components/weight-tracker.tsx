@@ -23,6 +23,12 @@ interface Lift {
   notes: string | null;
 }
 
+interface FormErrors {
+  sessionDate?: string;
+  exerciseName?: string;
+  sets?: string;
+}
+
 const ALL_EXERCISES = [...EXERCISES.default, ...EXERCISES.alternatives];
 
 export function WeightTracker({ clientId, clientName, color }: { clientId: number; clientName: string; color: "ver" | "val" }) {
@@ -32,6 +38,8 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
   const [editingId, setEditingId] = useState<number | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [pbOpen, setPbOpen] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
     sessionDate: todayISO(),
     exerciseName: ALL_EXERCISES[0],
@@ -75,6 +83,8 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
       notes: "",
     });
     setEditingId(null);
+    setErrors({});
+    setSubmitted(false);
   }
 
   function openEdit(lift: Lift) {
@@ -92,10 +102,32 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
     });
     setEditingId(lift.id);
     setShowForm(true);
+    setErrors({});
+    setSubmitted(false);
+  }
+
+  function validateForm(): FormErrors {
+    const errs: FormErrors = {};
+    if (!form.sessionDate) errs.sessionDate = "Date is required";
+    if (!form.exerciseName) errs.exerciseName = "Select an exercise";
+    // At least one set should have data
+    const hasSet = [1, 2, 3, 4].some((n) => {
+      const w = form[`set${n}Weight` as keyof typeof form];
+      return w !== "";
+    });
+    if (!hasSet && !form.startingWeight) {
+      errs.sets = "Log at least one set or starting weight";
+    }
+    return errs;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitted(true);
+    const errs = validateForm();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
     const body = {
       clientId,
       sessionDate: form.sessionDate,
@@ -187,17 +219,17 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
             onClick={() => setPbOpen(!pbOpen)}
             className="w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 text-left hover:bg-slate-50 transition-colors"
           >
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className={`${accentBg} p-1.5 sm:p-2 rounded-lg`}>
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className={`${accentBg} p-1.5 sm:p-2 rounded-lg shrink-0`}>
                 <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 text-sm sm:text-base">Current PBs — {clientName}</h3>
-                <p className="text-xs text-slate-500">{currentPBs.length} exercise{currentPBs.length === 1 ? "" : "s"} tracked</p>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-slate-900 text-sm sm:text-base truncate">Current PBs — {clientName}</h3>
+                <p className="text-xs text-slate-500">{currentPBs.length} exercise{currentPBs.length === 1 ? "" : "s"}</p>
               </div>
             </div>
             <ChevronDown
-              className={`h-5 w-5 text-slate-400 transition-transform duration-300 ${pbOpen ? "rotate-180" : ""}`}
+              className={`h-5 w-5 text-slate-400 transition-transform duration-300 shrink-0 ml-2 ${pbOpen ? "rotate-180" : ""}`}
             />
           </button>
           <div
@@ -210,13 +242,13 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
                 {currentPBs.map(({ exercise, pb, date }) => (
                   <div
                     key={exercise}
-                    className="flex items-center justify-between rounded-lg border p-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+                    className="flex items-center justify-between rounded-lg border p-2.5 sm:p-3 bg-slate-50"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-slate-800 truncate">{exercise}</p>
-                      <p className="text-xs text-slate-500">{formatDate(date)}</p>
+                      <p className="text-xs sm:text-sm font-medium text-slate-800 truncate">{exercise}</p>
+                      <p className="text-[10px] sm:text-xs text-slate-500">{formatDate(date)}</p>
                     </div>
-                    <span className={`text-lg font-bold ${accentText} ml-3 shrink-0`}>
+                    <span className={`text-base sm:text-lg font-bold ${accentText} ml-2 shrink-0`}>
                       {pb} kg
                     </span>
                   </div>
@@ -231,38 +263,39 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
       <Card>
         <CardHeader className="px-4 sm:px-6">
           <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <CardTitle className="text-base sm:text-lg truncate">Weight Tracker — {clientName}</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">Log sets, weights, and reps from each strength session</CardDescription>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-sm sm:text-lg truncate">Weights — {clientName}</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Log sets, weights & reps</CardDescription>
             </div>
             {!showForm && (
               <Button onClick={() => { resetForm(); setShowForm(true); }} className={`${colorClass} shrink-0 text-xs sm:text-sm`} size="sm">
-                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden xs:inline">Log</span> Lift
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Log
               </Button>
             )}
           </div>
         </CardHeader>
         {showForm && (
           <CardContent className="px-4 sm:px-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4" noValidate>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <Label htmlFor="sessionDate">Session date</Label>
+                  <Label htmlFor="sessionDate" className="text-xs sm:text-sm">Date <span className="text-red-500">*</span></Label>
                   <Input
                     id="sessionDate"
                     type="date"
                     value={form.sessionDate}
                     onChange={(e) => setForm({ ...form, sessionDate: e.target.value })}
-                    required
+                    className={errors.sessionDate ? "input-error" : ""}
                   />
+                  {errors.sessionDate && <p className="text-xs text-red-500 mt-1">{errors.sessionDate}</p>}
                 </div>
                 <div className="sm:col-span-2">
-                  <Label htmlFor="exerciseName">Exercise</Label>
+                  <Label htmlFor="exerciseName" className="text-xs sm:text-sm">Exercise <span className="text-red-500">*</span></Label>
                   <select
                     id="exerciseName"
                     value={form.exerciseName}
                     onChange={(e) => setForm({ ...form, exerciseName: e.target.value })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ${errors.exerciseName ? "input-error" : ""}`}
                   >
                     <optgroup label="Default exercises">
                       {EXERCISES.default.map((ex) => (
@@ -275,43 +308,47 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
                       ))}
                     </optgroup>
                   </select>
+                  {errors.exerciseName && <p className="text-xs text-red-500 mt-1">{errors.exerciseName}</p>}
                 </div>
               </div>
 
               <div>
-                <Label>Starting weight (kg)</Label>
+                <Label className="text-xs sm:text-sm">Starting weight (kg)</Label>
                 <Input
                   type="number"
+                  inputMode="decimal"
                   step="0.5"
-                  placeholder="Warm-up working weight"
+                  placeholder="Warm-up weight"
                   value={form.startingWeight}
                   onChange={(e) => setForm({ ...form, startingWeight: e.target.value })}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Working sets</Label>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                <Label className="text-xs sm:text-sm">Working sets</Label>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                   {[1, 2, 3, 4].map((n) => {
                     const wKey = `set${n}Weight` as keyof typeof form;
                     const rKey = `set${n}Reps` as keyof typeof form;
                     return (
-                      <div key={n} className="rounded-md border p-2.5 sm:p-3 bg-slate-50">
-                        <p className="text-xs font-semibold text-slate-600 mb-1.5 sm:mb-2">Set {n}</p>
-                        <div className="flex gap-1.5 sm:gap-2">
+                      <div key={n} className="rounded-md border p-2 sm:p-3 bg-slate-50">
+                        <p className="text-[10px] sm:text-xs font-semibold text-slate-600 mb-1 sm:mb-2">Set {n}</p>
+                        <div className="flex gap-1 sm:gap-2 items-center">
                           <Input
                             type="number"
+                            inputMode="decimal"
                             step="0.5"
                             placeholder="kg"
-                            className="text-sm"
+                            className="text-xs sm:text-sm h-8 sm:h-10 px-2"
                             value={form[wKey] as string}
                             onChange={(e) => setForm({ ...form, [wKey]: e.target.value })}
                           />
-                          <span className="self-center text-slate-400 text-xs sm:text-sm">×</span>
+                          <span className="text-slate-400 text-xs shrink-0">×</span>
                           <Input
                             type="number"
+                            inputMode="numeric"
                             placeholder="reps"
-                            className="text-sm"
+                            className="text-xs sm:text-sm h-8 sm:h-10 px-2"
                             value={form[rKey] as string}
                             onChange={(e) => setForm({ ...form, [rKey]: e.target.value })}
                           />
@@ -320,14 +357,16 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
                     );
                   })}
                 </div>
+                {errors.sets && <p className="text-xs text-red-500 mt-1">{errors.sets}</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="pbWeight">PB (kg)</Label>
+                  <Label htmlFor="pbWeight" className="text-xs sm:text-sm">PB (kg)</Label>
                   <Input
                     id="pbWeight"
                     type="number"
+                    inputMode="decimal"
                     step="0.5"
                     placeholder="Personal best"
                     value={form.pbWeight}
@@ -335,12 +374,13 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
                   />
                 </div>
                 <div>
-                  <Label htmlFor="nextSessionTarget">Next target (kg)</Label>
+                  <Label htmlFor="nextSessionTarget" className="text-xs sm:text-sm">Next target (kg)</Label>
                   <Input
                     id="nextSessionTarget"
                     type="number"
+                    inputMode="decimal"
                     step="0.5"
-                    placeholder={suggestion ? `Suggested: ${suggestion.weight}` : "Target"}
+                    placeholder={suggestion ? `${suggestion.weight}` : "Target"}
                     value={form.nextSessionTarget}
                     onChange={(e) => setForm({ ...form, nextSessionTarget: e.target.value })}
                   />
@@ -348,17 +388,17 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
               </div>
 
               {suggestion && (
-                <div className="rounded-md bg-amber-50 border border-amber-200 p-3 flex items-start gap-2">
+                <div className="rounded-md bg-amber-50 border border-amber-200 p-2.5 sm:p-3 flex items-start gap-2">
                   <TrendingUp className="h-4 w-4 text-amber-700 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-amber-900">Auto-suggested: {suggestion.weight} kg</p>
-                    <p className="text-xs text-amber-800">{suggestion.reasoning}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-amber-900 truncate">Suggested: {suggestion.weight} kg</p>
+                    <p className="text-[10px] sm:text-xs text-amber-800">{suggestion.reasoning}</p>
                   </div>
                 </div>
               )}
 
               <div>
-                <Label htmlFor="notes">Notes (optional)</Label>
+                <Label htmlFor="notes" className="text-xs sm:text-sm">Notes (optional)</Label>
                 <Input
                   id="notes"
                   placeholder="How did it feel?"
@@ -368,8 +408,8 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
               </div>
 
               <div className="flex gap-2">
-                <Button type="submit" className={colorClass}>{editingId ? "Update" : "Save"}</Button>
-                <Button type="button" variant="outline" onClick={() => { resetForm(); setShowForm(false); }}>Cancel</Button>
+                <Button type="submit" className={colorClass} size="sm">{editingId ? "Update" : "Save"}</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => { resetForm(); setShowForm(false); }}>Cancel</Button>
               </div>
             </form>
           </CardContent>
@@ -379,27 +419,27 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
       {/* Lifts by exercise */}
       <Card>
         <CardHeader className="px-4 sm:px-6">
-          <CardTitle className="text-base sm:text-lg">Session History</CardTitle>
+          <CardTitle className="text-sm sm:text-lg">Session History</CardTitle>
           <CardDescription className="text-xs sm:text-sm">Grouped by exercise, most recent first</CardDescription>
         </CardHeader>
         <CardContent className="px-4 sm:px-6">
           {loading ? (
             <p className="text-sm text-slate-500">Loading...</p>
           ) : lifts.length === 0 ? (
-            <p className="text-sm text-slate-500">No lifts logged yet. Click &quot;Log Lift&quot; to start.</p>
+            <p className="text-sm text-slate-500">No lifts logged yet. Click &quot;Log&quot; to start.</p>
           ) : (
             <div className="space-y-6">
               {[...byExercise.entries()].map(([exerciseName, sessions]) => {
                 const latestPB = Math.max(...sessions.map(s => s.pbWeight ?? 0));
                 return (
                   <div key={exerciseName}>
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
-                        <Dumbbell className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${accentText}`} />
-                        {exerciseName}
+                    <div className="flex items-center justify-between mb-2 gap-2">
+                      <h3 className="font-semibold text-slate-800 flex items-center gap-1.5 text-xs sm:text-base min-w-0">
+                        <Dumbbell className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${accentText} shrink-0`} />
+                        <span className="truncate">{exerciseName}</span>
                       </h3>
                       {latestPB > 0 && (
-                        <span className={`text-xs font-semibold ${accentText}`}>
+                        <span className={`text-[10px] sm:text-xs font-semibold ${accentText} shrink-0`}>
                           PB: {latestPB} kg
                         </span>
                       )}
@@ -407,33 +447,33 @@ export function WeightTracker({ clientId, clientName, color }: { clientId: numbe
                     {/* Mobile card layout */}
                     <div className="block sm:hidden space-y-2">
                       {sessions.map((s) => (
-                        <div key={s.id} className="rounded-lg border p-3 bg-slate-50">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">{formatDate(s.sessionDate)}</span>
+                        <div key={s.id} className="rounded-lg border p-2.5 bg-slate-50">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-medium">{formatDate(s.sessionDate)}</span>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => openEdit(s)}>Edit</Button>
+                              <Button variant="ghost" size="sm" className="h-6 text-[10px] px-1.5" onClick={() => openEdit(s)}>Edit</Button>
                               {confirmDeleteId === s.id ? (
                                 <>
-                                  <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)} className="h-7 text-xs px-2">Delete</Button>
-                                  <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-7 text-xs px-2">Cancel</Button>
+                                  <Button variant="destructive" size="sm" onClick={() => handleDelete(s.id)} className="h-6 text-[10px] px-1.5">Del</Button>
+                                  <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)} className="h-6 text-[10px] px-1.5">✕</Button>
                                 </>
                               ) : (
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(s.id)}>
-                                  <Trash2 className="h-3.5 w-3.5 text-slate-400" />
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setConfirmDeleteId(s.id)}>
+                                  <Trash2 className="h-3 w-3 text-slate-400" />
                                 </Button>
                               )}
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                            {s.startingWeight && <div><span className="text-slate-500">Start:</span> {s.startingWeight}kg</div>}
-                            {s.set1Weight && <div><span className="text-slate-500">S1:</span> {s.set1Weight}×{s.set1Reps ?? "?"}</div>}
-                            {s.set2Weight && <div><span className="text-slate-500">S2:</span> {s.set2Weight}×{s.set2Reps ?? "?"}</div>}
-                            {s.set3Weight && <div><span className="text-slate-500">S3:</span> {s.set3Weight}×{s.set3Reps ?? "?"}</div>}
-                            {s.set4Weight && <div><span className="text-slate-500">S4:</span> {s.set4Weight}×{s.set4Reps ?? "?"}</div>}
-                            {s.pbWeight && <div><span className="text-slate-500">PB:</span> <span className={`font-semibold ${accentText}`}>{s.pbWeight}kg</span></div>}
-                            {s.nextSessionTarget && <div><span className="text-slate-500">Next:</span> {s.nextSessionTarget}kg</div>}
+                          <div className="grid grid-cols-4 gap-1 text-[10px]">
+                            {s.set1Weight && <div><span className="text-slate-400">S1</span> {s.set1Weight}×{s.set1Reps ?? "?"}</div>}
+                            {s.set2Weight && <div><span className="text-slate-400">S2</span> {s.set2Weight}×{s.set2Reps ?? "?"}</div>}
+                            {s.set3Weight && <div><span className="text-slate-400">S3</span> {s.set3Weight}×{s.set3Reps ?? "?"}</div>}
+                            {s.set4Weight && <div><span className="text-slate-400">S4</span> {s.set4Weight}×{s.set4Reps ?? "?"}</div>}
                           </div>
-                          {s.notes && <p className="text-xs text-slate-500 mt-1.5 italic">{s.notes}</p>}
+                          <div className="flex gap-3 mt-1 text-[10px]">
+                            {s.pbWeight && <span><span className="text-slate-400">PB:</span> <span className={`font-semibold ${accentText}`}>{s.pbWeight}</span></span>}
+                            {s.nextSessionTarget && <span><span className="text-slate-400">Next:</span> {s.nextSessionTarget}</span>}
+                          </div>
                         </div>
                       ))}
                     </div>

@@ -73,7 +73,15 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen pb-16">
+    <main
+      className="min-h-screen pb-16 overflow-x-hidden"
+      onClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (!target.closest("input, select, textarea, button, a, [role='button']")) {
+          (document.activeElement as HTMLElement)?.blur();
+        }
+      }}
+    >
       {/* Toast notification */}
       <ToastNotification
         message={toastMessage}
