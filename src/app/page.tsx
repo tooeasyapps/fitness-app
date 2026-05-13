@@ -72,25 +72,25 @@ export default function Home() {
       {/* Main content */}
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Tabs defaultValue="checkin" className="space-y-4 sm:space-y-6">
-          <div className="overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:pb-0 scrollbar-hide">
-            <TabsList className="inline-flex sm:grid sm:w-full sm:grid-cols-5 h-auto gap-1">
-              <TabsTrigger value="checkin" className="flex-shrink-0 flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm min-w-[90px]">
+          <div className="w-full">
+            <TabsList className="flex flex-wrap sm:grid sm:grid-cols-5 h-auto gap-1 w-full bg-slate-100/50 p-1 rounded-lg">
+              <TabsTrigger value="checkin" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-2 text-xs sm:text-sm min-w-[30%]">
                 <ClipboardCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Check-in
               </TabsTrigger>
-              <TabsTrigger value="weights" className="flex-shrink-0 flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm min-w-[90px]">
+              <TabsTrigger value="weights" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-2 text-xs sm:text-sm min-w-[30%]">
                 <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Weights
               </TabsTrigger>
-              <TabsTrigger value="cardio" className="flex-shrink-0 flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm min-w-[90px]">
+              <TabsTrigger value="cardio" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-2 text-xs sm:text-sm min-w-[30%]">
                 <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Cardio
               </TabsTrigger>
-              <TabsTrigger value="strength" className="flex-shrink-0 flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm min-w-[90px]">
+              <TabsTrigger value="strength" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-2 text-xs sm:text-sm min-w-[40%]">
                 <Dumbbell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Strength
               </TabsTrigger>
-              <TabsTrigger value="faqs" className="flex-shrink-0 flex items-center gap-1.5 py-2 sm:py-2.5 text-xs sm:text-sm min-w-[90px]">
+              <TabsTrigger value="faqs" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-2 text-xs sm:text-sm min-w-[40%]">
                 <HelpCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 FAQs
               </TabsTrigger>
