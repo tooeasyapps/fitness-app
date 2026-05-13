@@ -136,9 +136,9 @@ export function FAQTab({ clientName, color }: { clientName: string; color: "ver"
             <div className="min-w-0 flex-1">
               <CardTitle className="text-sm sm:text-lg flex items-center gap-2">
                 <HelpCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${accentText}`} />
-                FAQs
+                Questions
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm truncate">Frequently asked questions and answers</CardDescription>
+              <CardDescription className="text-xs sm:text-sm truncate">Questions and answers</CardDescription>
             </div>
             {!showForm && (
               <Button onClick={() => setShowForm(true)} className={`${colorClass} shrink-0 text-xs sm:text-sm`} size="sm">

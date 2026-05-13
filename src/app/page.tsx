@@ -92,7 +92,7 @@ export default function Home() {
               </TabsTrigger>
               <TabsTrigger value="faqs" className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-2 text-xs sm:text-sm min-w-[40%]">
                 <HelpCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                FAQs
+                Questions
               </TabsTrigger>
             </TabsList>
           </div>
