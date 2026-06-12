@@ -128,7 +128,7 @@ export function StrengthGuide() {
             <li>• <strong>Order:</strong> leg → chest → back → shoulders → second leg at the end</li>
             <li>• <strong>1 warm-up set + 3–4 working sets</strong> per exercise</li>
             <li>• <strong>Beginner reps:</strong> 6–10 &nbsp;|&nbsp; <strong>Intermediate reps:</strong> 8–12</li>
-            <li>• Every working set should be a challenge. If the last 2 reps aren't hard, go heavier.</li>
+            <li>• Every working set should be a challenge. If the last 2 reps aren&apos;t hard, go heavier.</li>
           </ul>
         </CardContent>
       </Card>
@@ -194,7 +194,7 @@ export function StrengthGuide() {
             <li>• Warm up 5–10 min before — light cardio or dynamic stretching</li>
             <li>• Log your weights. If you hit the top of your rep range on all sets, go up next week</li>
             <li>• Control the weight down (2–3 sec), push or pull up with intent</li>
-            <li>• Don't rush between exercises — rest properly, then go hard</li>
+            <li>• Don&apos;t rush between exercises — rest properly, then go hard</li>
             <li>• Decide your workout before walking in. Once you start, just lift.</li>
           </ul>
         </CardContent>

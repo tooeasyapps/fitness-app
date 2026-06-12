@@ -122,9 +122,9 @@ export function CardioGuide() {
         </CardHeader>
         <CardContent>
           <ul className="space-y-2 text-sm text-slate-700">
-            <li>• <strong>Pick activities you actually like</strong> — you'll skip ones you hate</li>
+            <li>• <strong>Pick activities you actually like</strong> — you&apos;ll skip ones you hate</li>
             <li>• <strong>Track your heart rate</strong> — watch, phone strap, or gym machine</li>
-            <li>• <strong>Warm up 5 min, cool down 5 min</strong> — doesn't count toward the 2.5 hours but prevents injury</li>
+            <li>• <strong>Warm up 5 min, cool down 5 min</strong> — doesn&apos;t count toward the 2.5 hours but prevents injury</li>
             <li>• <strong>Hydrate</strong> — big glass before, sips during, refill after</li>
             <li>• <strong>Eat something an hour before</strong> — fruit or toast is plenty</li>
             <li>• <strong>Consistency beats intensity</strong> — three solid weeks at the low end beats one heroic week</li>
