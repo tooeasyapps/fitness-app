@@ -23,8 +23,10 @@ export default function Home() {
     fetch("/api/clients")
       .then((r) => r.json())
       .then((data: Client[]) => {
-        setClients(data);
-        if (data.length > 0) setSelected(data[0].id);
+        if (Array.isArray(data)) {
+          setClients(data);
+          if (data.length > 0) setSelected(data[0].id);
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
